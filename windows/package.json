@@ -1,0 +1,9 @@
+{
+  "name": "controle-alugueis",
+  "productName": "Controle de Aluguéis",
+  "version": "4.0.0",
+  "description": "Controle de aluguéis e assinaturas que funciona sem internet",
+  "main": "main.js",
+  "author": "Infortechcell",
+  "license": "UNLICENSED"
+}

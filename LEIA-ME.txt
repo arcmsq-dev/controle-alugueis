@@ -1,0 +1,44 @@
+CONTROLE DE ALUGUÉIS — pasta para o GitHub e para o Android
+============================================================
+
+O que tem aqui
+  index.html / app.html   o sistema inteiro (os dois são iguais)
+  versao.json             diz qual é a versão mais nova e o código de segurança dela
+  manifest.webmanifest, sw.js, icon-*.png   fazem o sistema virar app no celular
+
+PARTE 1 — Colocar no GitHub (uma vez só)
+  1. Crie uma conta grátis em github.com e clique em "New repository".
+  2. Nome: controle-alugueis. Deixe "Public" e crie.
+     (Público não expõe seus dados: só o programa fica lá. Os dados nunca saem do aparelho.)
+  3. Clique em "uploading an existing file", arraste TODOS os arquivos desta pasta e clique "Commit changes".
+  4. Vá em Settings > Pages. Em "Branch" escolha main e a pasta / (root). Salve.
+  5. Espere 1 a 2 minutos. O endereço será https://SEU-USUARIO.github.io/controle-alugueis/
+
+PARTE 2 — Instalar no Android
+  1. No celular, abra o endereço acima no Chrome (precisa de internet só nesta vez).
+  2. Toque nos três pontinhos > "Instalar app" (ou "Adicionar à tela inicial").
+  3. Abra o ícone "Aluguéis". A partir daí funciona sem internet.
+  4. Na primeira abertura, escolha o modo do aparelho e crie o administrador (ou importe o pacote do aparelho principal).
+
+PARTE 2B — Instalar no computador Windows (mesmo endereço)
+  1. Abra o endereço no Microsoft Edge ou no Chrome (com internet, só desta vez).
+  2. Clique no ícone de instalar, no fim da barra de endereço (ou menu ⋯ > Aplicativos > Instalar este site como um aplicativo).
+  3. Vai criar um atalho na área de trabalho e abrir em janela própria, sem internet.
+
+PARTE 2C — Instalador do Windows (alternativa leve)
+  A pasta "windows" deste pacote vai junto para o GitHub. Depois, no computador, rode Instalar-Windows.bat
+  (vem no outro arquivo, Instalador-Windows.zip), digite usuario/controle-alugueis e espere. Ele baixa o motor
+  do aplicativo do site oficial do Electron e o sistema do seu GitHub, e cria o atalho na área de trabalho.
+
+PARTE 3 — Atualizações pela internet
+  1. No sistema: Ajustes > Atualização do sistema > Atualizar > Repositório…
+  2. Digite: SEU-USUARIO/controle-alugueis  (ou cole o endereço do GitHub) e salve.
+  3. Toque em "Verificar na internet". Se houver versão nova, toque em "Baixar e instalar".
+  Para publicar uma versão nova: troque no repositório os arquivos index.html, app.html e versao.json pelos novos.
+
+Atualização sem internet (por arquivo)
+  Copie o app.html novo para o aparelho (WhatsApp, pendrive) e use Ajustes > Atualização do sistema > Atualizar > Usar um arquivo…
+
+Sempre que algo der errado
+  Se uma atualização não abrir, o sistema volta sozinho para a versão anterior.
+  Ajustes > Atualização do sistema > Atualizar > Versão de fábrica também desfaz qualquer atualização. Os dados não são apagados.
