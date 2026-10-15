@@ -1,6 +1,6 @@
 {
-  "versao": "4.0.0",
+  "versao": "4.0.6",
   "arquivo": "app.html",
-  "sha256": "6d924f48aaf01b4e8f0a3ad1ae71f48322464d706a24e536b98fe6c874ae0e5f",
-  "notas": "Versão inicial sem internet."
+  "sha256": "f47ea73c1726f6b4a54347877313368a6124c4e038ecd3f01fcea65e2c396386",
+  "notas": "Lixeira e estorno, recibos, orçamento e metas, importação de extrato, fluxo de caixa, equipamentos (rentabilidade, vistoria, manutenção, reservas), risco do cliente e criptografia opcional."
 }
