@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ctrl-alugueis-app" content="1"><meta name="app-versao" content="4.0.6"><meta name="theme-color" content="#2347C5"><meta name="mobile-web-app-capable" content="yes"><title>Controle de Aluguéis</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ctrl-alugueis-app" content="1"><meta name="app-versao" content="4.0.7"><meta name="theme-color" content="#2347C5"><meta name="mobile-web-app-capable" content="yes"><title>Controle de Aluguéis</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>
 (function(){
-var V='4.0.6';
+var V='4.0.7';
 window.__V=V;window.__Q=[];window.__decided=true;window.__DEFAULT_REPO='';
 function cmp(a,b){a=String(a).split('.').map(Number);b=String(b).split('.').map(Number);for(var i=0;i<3;i++){var x=a[i]||0,y=b[i]||0;if(x!==y)return x>y?1:-1}return 0}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}return null}
@@ -88,6 +88,7 @@ button{font:inherit;color:inherit}
 .date{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
 .tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
+@media(min-width:760px){.tabs{flex-wrap:wrap;overflow-x:visible}}
 .tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
 .tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
 .tab .badge{background:var(--bad);color:var(--surface);font-size:11px;font-weight:700;border-radius:999px;padding:0 6px;line-height:18px;min-width:18px;text-align:center}
@@ -660,6 +661,7 @@ function render(){
   tabsEl.innerHTML=TABS.filter(function(t){return t[0]!=='financas'||canAdmin}).map(function(t){
     return'<button type="button" class="tab" role="tab" aria-selected="'+(ui.tab===t[0])+'" data-act="tab" data-tab="'+t[0]+'">'+t[1]+(function(){var n=t[0]==='cobrancas'?D.late.length:t[0]==='despesas'?D.dLate.length:t[0]==='hoje'?D.hoje.filter(function(r){return ctEstado(ctDe(r))!=='enviada'}).length:t[0]==='equipamentos'?eqResProx().length:0;return n?'<span class="badge" aria-label="'+n+(t[0]==='hoje'?' para cobrar':t[0]==='equipamentos'?' reservas próximas':' atrasadas')+'">'+n+'</span>':''})()+'</button>';
   }).join('');
+  try{var at=tabsEl.querySelector('.tab[aria-selected=true]');if(at&&tabsEl.scrollWidth>tabsEl.clientWidth+2&&tabsEl.scrollWidth>0&&getComputedStyle(tabsEl).flexWrap==='nowrap')tabsEl.scrollLeft=Math.max(0,at.offsetLeft-24)}catch(e){}
   var ae=document.activeElement,keep=ae&&ae.id==='search'?[ae.selectionStart,ae.selectionEnd]:null;
   var html='';
   if(dbMissing){
