@@ -1,6 +1,6 @@
 {
-  "versao": "4.0.7",
+  "versao": "4.0.8",
   "arquivo": "app.html",
-  "sha256": "25857a3f17da5b9a6e359e1e4836e608af68f014b0953108f4ec7004fc5b7191",
-  "notas": "Corrige o corte da aba Ajustes no menu: em tela larga as abas passam para a segunda linha."
+  "sha256": "14f5b9d5daaaebb77a308e2104570d9298c75159923f80936b5a0f0295fec664",
+  "notas": "Novidades: importar clientes por planilha CSV, carnê em PDF, contrato com valor por extenso e baixar em PDF, extrato do cliente em PDF e mudança de vencimento por cobrança."
 }
