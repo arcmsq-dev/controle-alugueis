@@ -1,6 +1,6 @@
 {
-  "versao": "4.0.8",
+  "versao": "4.1.0",
   "arquivo": "app.html",
-  "sha256": "14f5b9d5daaaebb77a308e2104570d9298c75159923f80936b5a0f0295fec664",
-  "notas": "Novidades: importar clientes por planilha CSV, carnê em PDF, contrato com valor por extenso e baixar em PDF, extrato do cliente em PDF e mudança de vencimento por cobrança."
+  "sha256": "d4b08fcad50879e4b40a3a952ec5bba6464dd85271666825c1e953a0f3ea91d5",
+  "notas": "Versão inicial sem internet."
 }

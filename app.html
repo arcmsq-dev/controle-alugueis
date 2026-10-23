@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ctrl-alugueis-app" content="1"><meta name="app-versao" content="4.0.8"><meta name="theme-color" content="#2347C5"><meta name="mobile-web-app-capable" content="yes"><title>Controle de Aluguéis</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ctrl-alugueis-app" content="1"><meta name="app-versao" content="4.1.0"><meta name="theme-color" content="#2347C5"><meta name="mobile-web-app-capable" content="yes"><title>Controle de Aluguéis</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>
 (function(){
-var V='4.0.8';
+var V='4.1.0';
 window.__V=V;window.__Q=[];window.__decided=true;window.__DEFAULT_REPO='';
 function cmp(a,b){a=String(a).split('.').map(Number);b=String(b).split('.').map(Number);for(var i=0;i<3;i++){var x=a[i]||0,y=b[i]||0;if(x!==y)return x>y?1:-1}return 0}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}return null}
@@ -80,18 +80,52 @@ button{font:inherit;color:inherit}
 .lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
 .num{font-variant-numeric:tabular-nums}
 
-/* cabeçalho */
+/* cabeçalho e navegação: barra lateral no computador, barra inferior no celular */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
-.top-in{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;padding-block:14px 6px}
+.top-in{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;padding-block:14px 6px;padding-inline:16px;max-width:1080px;margin-inline:auto}
 .brand{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;min-width:0}
 .brand h1{font-size:22px}
 .date{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
-.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-@media(min-width:760px){.tabs{flex-wrap:wrap;overflow-x:visible}}
-.tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
-.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
-.tab .badge{background:var(--bad);color:var(--surface);font-size:11px;font-weight:700;border-radius:999px;padding:0 6px;line-height:18px;min-width:18px;text-align:center}
+.tabs{display:flex;gap:2px}
+.tab{appearance:none;background:none;border:0;border-radius:10px;padding:0 12px;min-height:42px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:10px;text-align:left}
+.tab:hover{background:var(--accent-soft)}
+.tab[aria-selected="true"]{color:var(--accent);background:var(--accent-soft)}
+.tab .ic{width:20px;height:20px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab .badge{background:var(--bad);color:var(--surface);font-size:11px;font-weight:700;border-radius:999px;padding:0 6px;line-height:18px;min-width:18px;text-align:center;margin-left:auto}
+.tab.more,.tabs .grp-h{display:none}
+.tabs .grp-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:14px 10px 4px}
+@media(min-width:900px){
+  body{padding-left:240px}
+  .top{position:fixed;left:0;top:0;bottom:0;width:240px;border-bottom:0;border-right:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto;padding:18px 12px 14px}
+  .top .top-in{display:contents}
+  .brand{display:grid;gap:2px;order:0;margin-bottom:12px}
+  .brand h1{font-size:19px;padding-inline:6px}
+  .date{padding-inline:6px}
+  #btn-new{order:1;min-height:42px;width:100%}
+  .tabs{order:2;flex-direction:column;flex:1;gap:2px;margin-top:8px}
+  .tabs .grp-h{display:block}
+  .tab[data-tab=ajustes]{margin-top:auto}
+  .top .off-user{order:3;margin:8px 0 0;justify-content:space-between;padding:10px 6px 0;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
+}
+@media(max-width:899px){
+  .top-in{flex-wrap:nowrap;padding-block:10px 8px;gap:10px}
+  .brand{display:grid;gap:0}.brand h1{font-size:18px}.date{font-size:11.5px}
+  .top-in .off-user{gap:8px}
+  .off-who small{display:none}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;background:var(--surface);background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+  .tabs .tab.sec,.tabs .grp-h{display:none}
+  .tab,.tab.more{flex-direction:column;justify-content:center;gap:2px;padding:4px 2px;min-height:52px;font-size:11px;position:relative;border-radius:12px;text-align:center}
+  .tab.more{display:flex}
+  .tab .ic{width:24px;height:24px}
+  .tab .tl{line-height:1.1}
+  .tab .badge{position:absolute;top:2px;left:calc(50% + 6px);margin:0;font-size:10.5px;line-height:17px;min-width:17px}
+  .tab:hover{background:none}
+  .tab[aria-selected="true"]{background:none}
+  #btn-new{position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:25;height:52px;padding:0 20px;border-radius:26px;box-shadow:0 8px 24px rgba(35,71,197,.38);font-size:15px}
+  #btn-new::before{content:"+";font-size:22px;line-height:1;margin-right:2px}
+  .wrap{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))!important}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
 
 .wrap{padding-block:20px 56px;display:grid;gap:16px}
 
@@ -115,7 +149,7 @@ button{font:inherit;color:inherit}
 .pill.warn{background:var(--warn-soft);color:var(--warn)}
 .pill.bad{background:var(--bad-soft);color:var(--bad)}
 .pill.info{background:var(--accent-soft);color:var(--accent)}
-.pill.mute{background:var(--line);color:var(--muted)}
+.pill.mute{background:var(--line);color:var(--ink)}
 
 /* indicadores */
 .strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -241,6 +275,38 @@ button{font:inherit;color:inherit}
   .r-act,.list-wide .r-act{flex:1 0 100%;justify-content:flex-start}
   .mini .r-main{flex-basis:100%}
 }
+
+/* Mais (celular) */
+.mais-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.mais-i{appearance:none;position:relative;display:grid;justify-items:center;align-content:center;gap:4px;min-height:80px;border:1px solid var(--line);border-radius:14px;background:var(--surface);font-weight:600;cursor:pointer;padding:8px}
+.mais-i.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.mais-i .ic{width:26px;height:26px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mais-i em{position:absolute;top:8px;right:10px;font-style:normal;background:var(--bad);color:var(--surface);font-size:11px;font-weight:700;border-radius:999px;padding:0 6px;line-height:18px}
+/* toques de 44 px no celular e em telas de toque */
+@media (max-width:899px),(pointer:coarse){
+  .btn,.btn.sm{min-height:44px;padding-inline:14px}
+  .chip{min-height:44px;padding-inline:14px;display:inline-flex;align-items:center}
+  .icon-btn{min-width:44px;min-height:44px;display:inline-grid;place-items:center}
+  .link{padding-block:12px;margin-block:-12px}
+  .input,select.input{min-height:46px}
+  .chk input{width:22px;height:22px}
+  .r-act{gap:8px}
+}
+.kpi .v{overflow-wrap:normal;white-space:nowrap}
+@media (max-width:899px){.kpi .v{font-size:21px}}
+@media (max-width:380px){.kpi .v{font-size:18px}.kpi{padding-inline:12px}}
+/* janelas viram folhas de baixo para cima no celular */
+@media (max-width:640px){
+  .overlay{place-items:end stretch;padding:0}
+  .sheet,.sheet.wide{max-width:none;border-radius:22px 22px 0 0;border-bottom:0;max-height:92dvh;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .sheet::before{content:"";width:40px;height:5px;border-radius:3px;background:var(--line);margin:8px auto 0;flex:0 0 auto}
+  .sheet-f{position:sticky;bottom:0;background:var(--surface)}
+  .sheet-f .grow{flex-basis:100%;height:0}
+  .sheet-f .btn.primary,.sheet-f .btn.danger.solid{flex:1 1 auto}
+}
+@media (prefers-reduced-motion:no-preference){
+  @media (max-width:640px){.sheet{animation:sup .2s ease-out}@keyframes sup{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}}
+}
 @media (prefers-reduced-motion:no-preference){
   .sheet{animation:up .16s ease-out}
   @keyframes up{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
@@ -262,13 +328,27 @@ button{font:inherit;color:inherit}
 body.off-role-user [data-act="del-pag"],body.off-role-user [data-act="del-al"],body.off-role-user [data-act="del-cliente"],body.off-role-user [data-act="del-item"],body.off-role-user [data-act="del-dpag"],body.off-role-user [data-act="del-desp"]{display:none!important}
 </style></head><body>
 <header class="top">
-  <div class="col top-in">
+  <div class="top-in">
     <div class="brand"><h1>Controle de Aluguéis</h1><span class="date" id="hdr-date"></span></div>
     <button type="button" class="btn primary" id="btn-new" data-act="novo-aluguel" hidden>Novo aluguel</button>
     <div id="off-user" class="off-user"></div>
   </div>
-  <nav class="col tabs" id="tabs" role="tablist" aria-label="Seções"></nav>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Seções"></nav>
 </header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<symbol id="i-painel" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></symbol>
+<symbol id="i-hoje" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></symbol>
+<symbol id="i-cobrancas" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></symbol>
+<symbol id="i-alugueis" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
+<symbol id="i-clientes" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></symbol>
+<symbol id="i-catalogo" viewBox="0 0 24 24"><path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.3"/></symbol>
+<symbol id="i-equipamentos" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+<symbol id="i-despesas" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2"/></symbol>
+<symbol id="i-relatorio" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></symbol>
+<symbol id="i-financas" viewBox="0 0 24 24"><path d="M12 3v18M16 7c-1-1.5-2.4-2-4-2-2.2 0-4 1-4 3s1.8 2.6 4 3 4 1 4 3-1.8 3-4 3c-1.8 0-3.2-.6-4.3-2"/></symbol>
+<symbol id="i-ajustes" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+<symbol id="i-mais" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></symbol>
+</defs></svg>
 <div id="off-banner"></div>
 <main id="view" class="col wrap"></main>
 <input type="file" id="file-in" accept="image/*" multiple hidden>
@@ -659,9 +739,14 @@ function render(){
   document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
   document.getElementById('btn-new').hidden=!(dbReady&&canWrite);
   if(ui.tab==='financas'&&dbReady&&!canAdmin)ui.tab='painel';
-  tabsEl.innerHTML=TABS.filter(function(t){return t[0]!=='financas'||canAdmin}).map(function(t){
-    return'<button type="button" class="tab" role="tab" aria-selected="'+(ui.tab===t[0])+'" data-act="tab" data-tab="'+t[0]+'">'+t[1]+(function(){var n=t[0]==='cobrancas'?D.late.length:t[0]==='despesas'?D.dLate.length:t[0]==='hoje'?D.hoje.filter(function(r){return ctEstado(ctDe(r))!=='enviada'}).length:t[0]==='equipamentos'?eqResProx().length:0;return n?'<span class="badge" aria-label="'+n+(t[0]==='hoje'?' para cobrar':t[0]==='equipamentos'?' reservas próximas':' atrasadas')+'">'+n+'</span>':''})()+'</button>';
-  }).join('');
+  var PRIM={painel:1,hoje:1,alugueis:1,clientes:1},GRP={hoje:'Dia a dia',clientes:'Cadastros',despesas:'Dinheiro'};
+  function tabN(k){return k==='cobrancas'?D.late.length:k==='despesas'?D.dLate.length:k==='hoje'?D.hoje.filter(function(r){return ctEstado(ctDe(r))!=='enviada'}).length:k==='equipamentos'?eqResProx().length:0}
+  function tabBadge(k){var n=tabN(k);return n?'<span class="badge" aria-label="'+n+(k==='hoje'?' para cobrar':k==='equipamentos'?' reservas próximas':' atrasadas')+'">'+n+'</span>':''}
+  var vis=TABS.filter(function(t){return t[0]!=='financas'||canAdmin});
+  var secSel=!PRIM[ui.tab],secN=vis.reduce(function(a,t){return a+(PRIM[t[0]]?0:tabN(t[0]))},0);
+  tabsEl.innerHTML=vis.map(function(t){
+    return(GRP[t[0]]?'<div class="grp-h" role="presentation">'+GRP[t[0]]+'</div>':'')+'<button type="button" class="tab'+(PRIM[t[0]]?'':' sec')+'" role="tab" aria-selected="'+(ui.tab===t[0])+'" data-act="tab" data-tab="'+t[0]+'"><svg class="ic" aria-hidden="true"><use href="#i-'+t[0]+'"/></svg><span class="tl">'+t[1]+'</span>'+tabBadge(t[0])+'</button>';
+  }).join('')+'<button type="button" class="tab more" role="tab" aria-selected="'+secSel+'" aria-haspopup="dialog" data-act="mais"><svg class="ic" aria-hidden="true"><use href="#i-mais"/></svg><span class="tl">Mais</span>'+(secN?'<span class="badge" aria-label="'+secN+' avisos">'+secN+'</span>':'')+'</button>';
   try{var at=tabsEl.querySelector('.tab[aria-selected=true]');if(at&&tabsEl.scrollWidth>tabsEl.clientWidth+2&&tabsEl.scrollWidth>0&&getComputedStyle(tabsEl).flexWrap==='nowrap')tabsEl.scrollLeft=Math.max(0,at.offsetLeft-24)}catch(e){}
   var ae=document.activeElement,keep=ae&&ae.id==='search'?[ae.selectionStart,ae.selectionEnd]:null;
   var html='';
@@ -682,6 +767,19 @@ function render(){
 var raf=0;
 function schedule(){cancelAnimationFrame(raf);raf=requestAnimationFrame(render)}
 if(window.__OFF)window.__OFF.render=schedule;
+function openMais(){
+  var G=[['Dia a dia',['cobrancas']],['Cadastros',['catalogo','equipamentos']],['Dinheiro',['despesas','relatorio','financas']],['Sistema',['ajustes']]];
+  var nome={};TABS.forEach(function(t){nome[t[0]]=t[1]});
+  var body=G.map(function(g){
+    var it=g[1].filter(function(k){return k!=='financas'||canAdmin});
+    if(!it.length)return'';
+    return'<div class="h3">'+g[0]+'</div><div class="mais-g">'+it.map(function(k){
+      var n=k==='cobrancas'?D.late.length:k==='despesas'?D.dLate.length:k==='equipamentos'?eqResProx().length:0;
+      return'<button type="button" class="mais-i'+(ui.tab===k?' on':'')+'" data-act="tab" data-tab="'+k+'"><svg class="ic" aria-hidden="true"><use href="#i-'+k+'"/></svg><span>'+nome[k]+'</span>'+(n?'<em aria-label="'+n+' avisos">'+n+'</em>':'')+'</button>';
+    }).join('')+'</div>';
+  }).join('');
+  openModal('Mais',body,{submit:null});
+}
 function setTab(t){
   ui.tab=t;
   try{history.replaceState(null,'','#'+t)}catch(e){}
@@ -6393,6 +6491,7 @@ document.addEventListener('click',function(e){
   var act=el.dataset.act,id=el.dataset.id;
   switch(act){
     case'tab':if(!modalEl.hidden)closeModal();setTab(el.dataset.tab);break;
+    case'mais':openMais();break;
     case'close':closeModal();break;
     case'novo-aluguel':openAluguel();break;
     case'novo-cliente':openCliente();break;
