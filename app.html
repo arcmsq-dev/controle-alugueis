@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ctrl-alugueis-app" content="1"><meta name="app-versao" content="4.7.0"><meta name="theme-color" content="#2347C5"><meta name="mobile-web-app-capable" content="yes"><title>Controle de Aluguéis</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ctrl-alugueis-app" content="1"><meta name="app-versao" content="4.7.1"><meta name="theme-color" content="#2347C5"><meta name="mobile-web-app-capable" content="yes"><title>Controle de Aluguéis</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>
 (function(){
-var V='4.7.0';
-window.__V=V;window.__Q=[];window.__decided=true;window.__DEFAULT_REPO='';
+var V='4.7.1';
+window.__V=V;window.__Q=[];window.__decided=true;window.__DEFAULT_REPO='';if(!window.__DEFAULT_REPO){try{var hm=/^([\w-]+)\.github\.io$/i.exec(location.hostname),sg=location.pathname.split('/')[1];if(hm&&sg)window.__DEFAULT_REPO=hm[1]+'/'+sg}catch(e){}}
 function cmp(a,b){a=String(a).split('.').map(Number);b=String(b).split('.').map(Number);for(var i=0;i<3;i++){var x=a[i]||0,y=b[i]||0;if(x!==y)return x>y?1:-1}return 0}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}return null}
 function bdb(cb){try{var r=indexedDB.open('ctrl_boot',1);r.onupgradeneeded=function(){r.result.createObjectStore('b')};r.onsuccess=function(){cb(r.result)};r.onerror=function(){cb(null)}}catch(e){cb(null)}}
@@ -8063,7 +8063,7 @@ function repoDialog(){
 }
 function autoCheck(){
   if(!cur||cur.role!=='admin'||!rawBase()||navigator.onLine===false)return;
-  if(Date.now()-(meta.updCheck||0)<12*3600000)return;
+  if(Date.now()-(meta.updCheck||0)<5*60000)return;
   checkUpdate().then(function(j){if(cmpVer(j.versao,VER)>0){OFF.novaVersao=j;banner()}},function(){});
 }
 
