@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ctrl-alugueis-app" content="1"><meta name="app-versao" content="4.6.0"><meta name="theme-color" content="#2347C5"><meta name="mobile-web-app-capable" content="yes"><title>Controle de Aluguéis</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ctrl-alugueis-app" content="1"><meta name="app-versao" content="4.7.0"><meta name="theme-color" content="#2347C5"><meta name="mobile-web-app-capable" content="yes"><title>Controle de Aluguéis</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>
 (function(){
-var V='4.6.0';
+var V='4.7.0';
 window.__V=V;window.__Q=[];window.__decided=true;window.__DEFAULT_REPO='';
 function cmp(a,b){a=String(a).split('.').map(Number);b=String(b).split('.').map(Number);for(var i=0;i<3;i++){var x=a[i]||0,y=b[i]||0;if(x!==y)return x>y?1:-1}return 0}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}return null}
@@ -330,6 +330,8 @@ button{font:inherit;color:inherit}
 .ia-f{display:grid;grid-template-columns:minmax(0,1fr) 70px minmax(0,1.2fr);gap:10px;align-items:center;padding:8px 16px;border-top:1px solid var(--line);font-size:14px}
 .ia-b{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
 .ia-b i{display:block;height:100%;background:var(--bad)}
+#wa-link[aria-disabled=true]{opacity:.5;pointer-events:none}
+#wa-link{display:inline-flex;align-items:center;text-decoration:none}
 @media (prefers-reduced-motion:no-preference){
   @media (max-width:640px){.sheet{animation:sup .2s ease-out}@keyframes sup{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}}
 }
@@ -423,8 +425,9 @@ function sumBy(arr,fn){return fromC(arr.reduce(function(s,x){return s+toC(fn(x))
 /* ---------- estado ---------- */
 var state={clientes:[],itens:[],alugueis:[],pagamentos:[],fotos:[],despesas:[],despPag:[],assDig:[],recibos:[],contatos:[],fcontas:[],flanc:[],fcartoes:[],fclanc:[],forc:[],fmetas:[],faportes:[],fconf:[],manut:[],vist:[],reservas:[],config:null};
 var loaded={clientes:false,itens:false,alugueis:false,pagamentos:false,fotos:false,despesas:false,despPag:false,assDig:false,recibos:false,contatos:false,fcontas:false,flanc:false,fcartoes:false,fclanc:false,forc:false,fmetas:false,faportes:false,fconf:false,config:false,manut:false,vist:false,reservas:false};
+var alSnap=null,voltaAl=null;
 var db=null,user=null,assetsApi=null,canWrite=true,canAdmin=true,dbReady=false,dbMissing=false,loadErr=null;
-var ui={fsub:'lanc',fcart:'',fcmes:'',fmes:'',ff:'todos',tab:'painel',cob:'abertas',al:'ativos',dsp:'abertas',mes:'',q:{alugueis:'',clientes:'',catalogo:''}};
+var ui={fsub:'lanc',fcart:'',fcmes:'',fmes:'',ff:'todos',tab:'painel',cob:'abertas',al:'ativos',dsp:'abertas',mes:'',q:{alugueis:'',clientes:'',catalogo:'',cobrancas:'',hoje:'',inadimplencia:''}};
 var TABS=[['painel','Painel'],['hoje','Cobrar hoje'],['agenda','Agenda'],['cobrancas','Cobranças'],['alugueis','Aluguéis'],['clientes','Clientes'],['catalogo','Catálogo'],['equipamentos','Equipamentos'],['despesas','Despesas'],['inadimplencia','Inadimplência'],['relatorio','Relatório'],['financas','Minhas finanças'],['ajustes','Ajustes']];
 var D=null;
 
@@ -615,7 +618,7 @@ function waMsg(r){
 }
 function waBtn(c,text,label){
   var h=waHref(c,text);
-  if(!h)return'<span class="btn sm wa disabled" title="Cliente sem telefone cadastrado">'+label+'</span>';
+  if(!h)return'<a class="btn sm wa" href="'+esc('https://wa.me/?text='+encodeURIComponent(text))+'" target="_blank" rel="noopener" title="Cliente sem telefone: o WhatsApp abre para você escolher o contato">'+label+'</a>';
   return'<a class="btn sm wa" href="'+esc(h)+'" target="_blank" rel="noopener">'+label+'</a>';
 }
 
@@ -704,21 +707,21 @@ function viewPainel(){
 function viewCobrancas(){
   var f=ui.cob;
   var chips=[['abertas','Em aberto',D.open.length],['atrasadas','Atrasadas',D.late.length],['semana','Próximos 7 dias',D.soon.length],['pagas','Pagamentos',state.pagamentos.length]];
-  var bar='<div class="toolbar"><div class="chips">'+chips.map(function(c){return'<button type="button" class="chip" aria-pressed="'+(f===c[0])+'" data-act="filtro-cob" data-v="'+c[0]+'">'+c[1]+'<span class="n">'+c[2]+'</span></button>'}).join('')+'</div></div>';
-  var body;
+  var bar='<div class="toolbar"><div class="chips">'+chips.map(function(c){return'<button type="button" class="chip" aria-pressed="'+(f===c[0])+'" data-act="filtro-cob" data-v="'+c[0]+'">'+c[1]+'<span class="n">'+c[2]+'</span></button>'}).join('')+'</div>'+searchBox('Buscar cliente ou item')+'</div>';
+  var body,qc=ui.q.cobrancas;
   if(f==='pagas'){
-    var ps=state.pagamentos.slice().sort(function(a,b){return String(b.data).localeCompare(String(a.data))||(b.criadoEm||0)-(a.criadoEm||0)});
+    var ps=state.pagamentos.filter(function(p){if(!qc)return true;var a=state.alugueis.find(function(x){return x.id===p.aluguelId});return a&&matchQ(qc,nomeCli(a.clienteId)+' '+nomeItem(a.itemId))}).sort(function(a,b){return String(b.data).localeCompare(String(a.data))||(b.criadoEm||0)-(a.criadoEm||0)});
     body='<div class="sumline">'+ps.length+(ps.length===1?' pagamento registrado':' pagamentos registrados')+' · '+money(sumBy(ps,function(p){return p.valor}))+' no total</div>'+(ps.length?ps.map(function(p){
       var a=state.alugueis.find(function(x){return x.id===p.aluguelId});
       return'<div class="row"><div class="r-main"><button type="button" class="link" data-act="abrir-al" data-id="'+esc(p.aluguelId)+'">'+esc(a?nomeCli(a.clienteId):'Aluguel removido')+'</button><div class="sub">'+esc(a?nomeItem(a.itemId):'')+(p.ref&&p.ref!=='total'?' · mensalidade '+esc(p.ref.slice(5)+'/'+p.ref.slice(0,4)):'')+(p.encargos>0?' · inclui multa e juros de '+money(p.encargos):'')+'</div></div><div class="r-meta"><div class="lbl">'+esc(p.forma||'Pagamento')+'</div>'+fmtDate(p.data)+'</div><div class="r-amt"><span class="amt">'+money(p.valor)+'</span></div><div class="r-act">'+(canWrite?pagAct(p,'del-pag'):'')+'</div></div>';
-    }).join(''):'<div class="row"><div class="r-main muted">Nenhum pagamento registrado ainda.</div></div>');
+    }).join(''):'<div class="row"><div class="r-main muted">Nenhum pagamento registrado ainda. Eles aparecem aqui quando você toca em Receber numa cobrança.</div></div>');
   }else{
-    var list=f==='atrasadas'?D.late:f==='semana'?D.soon:D.open;
+    var list=(f==='atrasadas'?D.late:f==='semana'?D.soon:D.open).filter(function(r){return matchQ(qc,nomeCli(r.a.clienteId)+' '+nomeItem(r.a.itemId))});
     body='<div class="sumline">'+list.length+(list.length===1?' cobrança':' cobranças')+' · '+money(sumBy(list,function(r){return r.total}))+'</div>'+(list.length?list.map(cobRow).join(''):'<div class="row"><div class="r-main muted">Nenhuma cobrança neste filtro.</div></div>');
   }
   return bar+'<section class="panel list-wide">'+body.replace('<div class="sumline">','<div class="sumline" style="padding-top:12px">')+'</section>';
 }
-function matchQ(q,txt){return!q||String(txt).toLowerCase().indexOf(q.toLowerCase())>=0}
+function matchQ(q,txt){return!q||normB(txt).indexOf(normB(q))>=0}
 function searchBox(ph){return'<input class="input search" id="search" type="search" placeholder="'+ph+'" value="'+esc(ui.q[ui.tab]||'')+'" aria-label="Buscar" autocomplete="off">'}
 function viewAlugueis(){
   var all=state.alugueis.slice();
@@ -753,7 +756,7 @@ function viewClientes(){
     var saldo=sumBy(als,function(a){return sumBy(D.byAl[a.id]||[],function(r){return r.total})});
     var late=als.some(function(a){return(D.byAl[a.id]||[]).some(function(r){return r.status==='atrasado'})});
     return'<div class="row"><div class="r-main"><button type="button" class="link" data-act="ed-cliente" data-id="'+esc(c.id)+'">'+esc(c.nome)+'</button><div class="sub">'+(esc(c.telefone)||'Sem telefone')+'</div></div><div class="r-meta">'+ativos+(ativos===1?' aluguel ativo':' aluguéis ativos')+'</div><div class="r-amt">'+(saldo>0?'<span class="amt">'+money(saldo)+'</span><span class="pill '+(late?'bad':'info')+'">'+(late?'Em atraso':'A receber')+'</span>':'<span class="pill good">Em dia</span>')+' '+pillRisco(rk[c.id])+'</div><div class="r-act">'+(canWrite?'<button type="button" class="btn sm" data-act="ed-cliente" data-id="'+esc(c.id)+'">Editar</button>':'')+'</div></div>';
-  }).join(''):'<div class="empty"><p>'+(state.clientes.length?'Nenhum cliente encontrado.':'Nenhum cliente cadastrado ainda.')+'</p></div>';
+  }).join(''):'<div class="empty"><p>'+(state.clientes.length?'Nenhum cliente encontrado.':'Nenhum cliente cadastrado ainda.')+'</p>'+(!state.clientes.length?'<p>Cadastre o primeiro cliente. Se já tem uma lista (do sistema antigo ou de uma planilha), importe todos de uma vez.</p>'+(canWrite?'<div class="actions"><button type="button" class="btn primary" data-act="novo-cliente">Novo cliente</button><button type="button" class="btn" data-act="cimp-abrir">Importar clientes</button></div>':''):'')+'</div>';
   return bar+'<section class="panel list-wide">'+rows+'</section>';
 }
 function viewCatalogo(){
@@ -770,7 +773,7 @@ function viewCatalogo(){
     if(i.valorMes)vals.push(money(i.valorMes)+'/mês');
     var com=(i.tipo!=='assinatura'&&ativos.length)?'com '+esc(nomeCli(ativos[0].clienteId)):'';
     return'<div class="row"><div class="r-main"><button type="button" class="link" data-act="ed-item" data-id="'+esc(i.id)+'">'+esc(i.nome)+'</button><div class="sub">'+itemTipo(i)+(i.codigo?' · '+esc(i.codigo):'')+(com?' · '+com:'')+'</div></div><div class="r-meta">'+(vals.join(' · ')||'<span class="muted">Sem valor</span>')+'</div><div class="r-amt">'+pill+'</div><div class="r-act">'+(canWrite?'<button type="button" class="btn sm" data-act="ed-item" data-id="'+esc(i.id)+'">Editar</button>':'')+'</div></div>';
-  }).join(''):'<div class="empty"><p>'+(state.itens.length?'Nenhum item encontrado.':'Nenhum item cadastrado ainda.')+'</p></div>';
+  }).join(''):'<div class="empty"><p>'+(state.itens.length?'Nenhum item encontrado.':'Nenhum item cadastrado ainda.')+'</p>'+(!state.itens.length?'<p>Cadastre o que você aluga: um equipamento (notebook, projetor…) ou um plano mensal. Depois é só criar o aluguel.</p>'+(canWrite?'<div class="actions"><button type="button" class="btn primary" data-act="novo-item">Novo item</button></div>':''):'')+'</div>';
   return bar+'<section class="panel list-wide">'+rows+'</section>';
 }
 
@@ -864,6 +867,10 @@ function openModal(title,body,o){
 function closeModal(){
   modalEl.hidden=true;modalEl.innerHTML='';modalOnSubmit=null;
   if(lastFocus&&lastFocus.focus&&document.contains(lastFocus)){try{lastFocus.focus()}catch(e){}}
+  if(voltaAl){   /* cadastro feito de dentro do aluguel: volta para o aluguel, com o que já estava preenchido */
+    var v=voltaAl,n=0;voltaAl=null;
+    (function go(){if(v.aguarda&&!v.aguarda()&&n++<30){setTimeout(go,50);return}openAluguel(v.id,v.pre)})();
+  }
 }
 modalEl.addEventListener('submit',function(e){
   e.preventDefault();
@@ -911,7 +918,7 @@ function openCliente(id){
     onSubmit:function(f){
       var nome=val(f,'f-nome');if(!nome)fail('Informe o nome do cliente.');
       var data={nome:nome,telefone:val(f,'f-tel'),doc:val(f,'f-doc'),endereco:val(f,'f-end'),atividade:val(f,'f-ativ'),obs:val(f,'f-obs')};
-      return w(function(){return c?db.doc('clientes/'+c.id).update(data):db.collection('clientes').add(Object.assign({criadoEm:Date.now()},data))}).then(function(){toast('Cliente salvo.')});
+      return w(function(){return c?db.doc('clientes/'+c.id).update(data):db.collection('clientes').add(Object.assign({criadoEm:Date.now()},data))}).then(function(r){toast('Cliente salvo.');if(voltaAl&&!c&&r&&r.id){voltaAl.pre.clienteId=r.id;voltaAl.aguarda=function(){return!!D.cli[r.id]}}});
     }
   });
 }
@@ -1107,7 +1114,7 @@ function openItem(id){
       var vd=val(f,'f-dia')?parseMoney(val(f,'f-dia')):0,vm=val(f,'f-mes')?parseMoney(val(f,'f-mes')):0,vr=val(f,'f-rep')?parseMoney(val(f,'f-rep')):0,vc=val(f,'f-compra')?parseMoney(val(f,'f-compra')):0;
       if(isNaN(vd)||isNaN(vm)||isNaN(vr)||isNaN(vc)||vc<0)fail('Confira os valores informados.');
       var data={tipo:val(f,'f-tipo'),nome:nome,codigo:val(f,'f-cod'),valorDia:vd,valorMes:vm,valorReposicao:vr,valorCompra:vc,dataCompra:val(f,'f-dcompra'),obs:val(f,'f-obs')};
-      return w(function(){return i?db.doc('itens/'+i.id).update(data):db.collection('itens').add(Object.assign({criadoEm:Date.now()},data))}).then(function(){toast('Item salvo.')});
+      return w(function(){return i?db.doc('itens/'+i.id).update(data):db.collection('itens').add(Object.assign({criadoEm:Date.now()},data))}).then(function(r){toast('Item salvo.');if(voltaAl&&!i&&r&&r.id){voltaAl.pre.itemId=r.id;voltaAl.pre.valorUnit=0;voltaAl.aguarda=function(){return!!D.itm[r.id]}}});
     }
   });
 }
@@ -1126,8 +1133,8 @@ function openAluguel(id,pre){
     return'<option value="'+esc(i.id)+'"'+(off||man?' disabled':'')+(a&&a.itemId===i.id?' selected':'')+'>'+esc(i.nome)+(i.codigo?' ('+esc(i.codigo)+')':'')+(off?' · alugado':man?' · em manutenção':'')+'</option>';
   }).join('');
   var mod=a?a.modalidade:'dia';
-  var body=fld('Cliente','f-cli','<select class="input" id="f-cli" name="f-cli">'+cOpts+'</select>','<span id="f-risco" aria-live="polite"></span>')+
-    fld('Item','f-item','<select class="input" id="f-item" name="f-item">'+iOpts+'</select>')+
+  var body=fld('Cliente','f-cli','<input class="input" type="search" id="f-cli-q" placeholder="Digite para procurar o cliente" aria-label="Procurar cliente" autocomplete="off" style="margin-bottom:6px"><select class="input" id="f-cli" name="f-cli">'+cOpts+'</select>'+(canWrite?'<button type="button" class="btn sm" data-act="al-novo-cli" style="margin-top:6px">+ Cadastrar novo cliente</button>':''),'<span id="f-risco" aria-live="polite"></span>')+
+    fld('Item','f-item','<input class="input" type="search" id="f-item-q" placeholder="Digite para procurar o item" aria-label="Procurar item" autocomplete="off" style="margin-bottom:6px"><select class="input" id="f-item" name="f-item">'+iOpts+'</select>'+(canWrite?'<button type="button" class="btn sm" data-act="al-novo-item" style="margin-top:6px">+ Cadastrar novo item</button>':''))+
     '<div class="two">'+fld('Cobrança','f-mod','<select class="input" id="f-mod" name="f-mod"><option value="dia"'+(mod==='dia'?' selected':'')+'>Por dia</option><option value="mes"'+(mod==='mes'?' selected':'')+'>Por mês</option></select>')+
     fld('<span id="lb-val">Valor da diária (R$)</span>','f-val',inp('f-val',a?fmtIn(a.valorUnit):'','inputmode="decimal" placeholder="0,00" autocomplete="off"'))+'</div>'+
     '<div class="two">'+fld('Início','f-ini',inp('f-ini',a?a.inicio:t,'type="date"'))+
@@ -1163,11 +1170,30 @@ function openAluguel(id,pre){
       $('f-item').addEventListener('change',function(){edited=false;autofill();sync()});
       $('f-mod').addEventListener('change',function(){edited=false;autofill();sync()});
       ['f-ini','f-fim','f-dv'].forEach(function(n){$(n).addEventListener('input',sync)});
+      function wireBusca(sel,q){
+        var all=[].map.call(sel.options,function(o){return{v:o.value,t:o.textContent,d:o.disabled}});
+        q.addEventListener('keydown',function(e){if(e.key==='Enter')e.preventDefault()});
+        q.addEventListener('input',function(){
+          var txt=q.value.trim(),cur=sel.value,m=all.filter(function(o){return o.v&&matchQ(txt,o.t)});
+          sel.innerHTML='';
+          var ph=document.createElement('option');ph.value='';ph.textContent=(m.length||!txt)?'Selecione':'Nenhum encontrado';sel.appendChild(ph);
+          m.forEach(function(o){var op=document.createElement('option');op.value=o.v;op.textContent=o.t;if(o.d)op.disabled=true;sel.appendChild(op)});
+          var keep=m.some(function(o){return o.v===cur}),livres=m.filter(function(o){return!o.d});
+          sel.value=keep?cur:'';
+          if(txt&&!keep&&livres.length===1)sel.value=livres[0].v;
+          if(sel.value!==cur)sel.dispatchEvent(new Event('change',{bubbles:true}));
+        });
+      }
+      wireBusca($('f-cli'),$('f-cli-q'));wireBusca($('f-item'),$('f-item-q'));
+      alSnap=function(){return{id:id,pre:{clienteId:$('f-cli').value,itemId:$('f-item').value,modalidade:$('f-mod').value,inicio:$('f-ini').value,fim:$('f-fim').value,valorUnit:parseMoney($('f-val').value)||0,diaVenc:$('f-dv').value,fimContrato:$('f-fimc').value,estadoEntrega:$('f-estado').value,acessorios:$('f-acess').value,obs:$('f-obs').value,reservaId:pre&&pre.reservaId}}};
       riscoUp();
       if(pre){
         $('f-cli').value=pre.clienteId||'';$('f-item').value=pre.itemId||'';$('f-mod').value=pre.modalidade||'dia';
         $('f-ini').value=pre.inicio||t;if(pre.fim)$('f-fim').value=pre.fim;
         $('f-val').value=pre.valorUnit?fmtIn(pre.valorUnit):'';edited=true;riscoUp();
+        if(pre.diaVenc)$('f-dv').value=pre.diaVenc;if(pre.fimContrato)$('f-fimc').value=pre.fimContrato;
+        if(pre.estadoEntrega)$('f-estado').value=pre.estadoEntrega;if(pre.acessorios)$('f-acess').value=pre.acessorios;if(pre.obs)$('f-obs').value=pre.obs;
+        if(!pre.valorUnit&&pre.itemId){edited=false;autofill()}
       }
       sync();
     },
@@ -4961,7 +4987,7 @@ function viewRent(){
     if(r.ocup!=null)extra.push('ocupação '+pct10(r.ocup));
     if(r.roi!=null)extra.push('retorno '+pct10(r.roi)+' do investimento');
     return'<div class="row" data-eq="'+esc(r.it.id)+'"><div class="r-main"><button type="button" class="link" data-act="eq-det" data-id="'+esc(r.it.id)+'">'+esc(r.it.nome)+'</button><div class="sub">Recebido '+mC(r.rec)+' · Manutenção '+mC(r.man)+(r.dsp?' · Despesas '+mC(r.dsp):'')+(extra.length?' · '+extra.join(' · '):'')+'</div></div><div class="r-amt"><span class="amt" data-res="'+r.res+'">'+mC(r.res)+'</span>'+pill+'</div></div>';
-  }).join(''):'<div class="empty"><p>Nenhum equipamento cadastrado ainda.</p></div>';
+  }).join(''):'<div class="empty"><p>Nenhum equipamento cadastrado ainda.</p><p>Cadastre no Catálogo um item do tipo equipamento. Aqui você acompanha quanto cada um rende, as manutenções e as reservas.</p><div class="actions"><button type="button" class="btn primary" data-act="tab" data-tab="catalogo">Ir para o Catálogo</button></div></div>';
   var nota='<div class="hint" style="padding:8px 16px">Resultado = pagamentos recebidos (já com estornos) − custos de manutenção − despesas ligadas ao equipamento. Informe o valor de compra no cadastro do item para ver o retorno do investimento.</div>';
   return bar+sum+'<section class="panel list-wide">'+body+'</section>'+nota;
 }
@@ -5266,6 +5292,7 @@ function hojeRow(r){
 /* ---------- relatório de inadimplência ---------- */
 /* Só lê o que já existe: cobranças vencidas e não pagas, com multa e juros do dia. Não cobra nem marca nada. */
 function inadModel(minD){
+  var qi=ui.q.inadimplencia;
   var by={},ord=[];
   D.late.forEach(function(r){
     var id=r.a.clienteId,g=by[id];
@@ -5273,7 +5300,7 @@ function inadModel(minD){
     g.rows.push(r);g.saldoC+=toC(r.saldo);g.encC+=toC(r.enc);
     if(-r.delta>g.max)g.max=-r.delta;if(r.venc<g.velha)g.velha=r.venc;
   });
-  var cl=ord.filter(function(g){return g.max>minD}).map(function(g){g.totC=g.saldoC+g.encC;g.rows.sort(function(x,y){return x.venc<y.venc?-1:x.venc>y.venc?1:0});return g}).sort(function(a,b){return b.totC-a.totC});
+  var cl=ord.filter(function(g){return g.max>minD&&matchQ(qi,nomeCli(g.cid))}).map(function(g){g.totC=g.saldoC+g.encC;g.rows.sort(function(x,y){return x.venc<y.venc?-1:x.venc>y.venc?1:0});return g}).sort(function(a,b){return b.totC-a.totC});
   var rows=[];cl.forEach(function(g){rows=rows.concat(g.rows)});
   var faixas=[['1 a 7 dias',1,7],['8 a 30 dias',8,30],['31 a 60 dias',31,60],['Mais de 60 dias',61,99999]].map(function(f){
     var rs=rows.filter(function(r){return -r.delta>=f[1]&&-r.delta<=f[2]});
@@ -5289,8 +5316,8 @@ function inadMsg(g){
 function viewInadimplencia(){
   var f=ui.inad||0,m=inadModel(f),M=function(c){return money(fromC(c))};
   var chips=[[0,'Todas'],[30,'Mais de 30 dias'],[60,'Mais de 60 dias']].map(function(c){return'<button type="button" class="chip" aria-pressed="'+(f===c[0])+'" data-act="inad-f" data-v="'+c[0]+'">'+c[1]+'<span class="n">'+inadModel(c[0]).cl.length+'</span></button>'}).join('');
-  var bar='<div class="toolbar"><div class="chips">'+chips+'</div>'+(m.cl.length?'<div class="chips"><button type="button" class="btn sm primary" data-act="inad-pdf">Baixar PDF</button><button type="button" class="btn sm" data-act="inad-print">Imprimir</button></div>':'')+'</div>';
-  if(!m.cl.length)return bar+'<section class="panel"><div class="empty"><h2>'+(f?'Ninguém com mais de '+f+' dias de atraso':'Ninguém em atraso')+'</h2><p>'+(f?'Escolha “Todas” para ver quem está atrasado há menos tempo.':'Nenhuma cobrança vencida e sem pagamento. Quando houver, os clientes aparecem aqui, do maior para o menor valor devido.')+'</p></div></section>';
+  var bar='<div class="toolbar"><div class="chips">'+chips+'</div>'+searchBox('Buscar cliente')+(m.cl.length?'<div class="chips"><button type="button" class="btn sm primary" data-act="inad-pdf">Baixar PDF</button><button type="button" class="btn sm" data-act="inad-print">Imprimir</button></div>':'')+'</div>';
+  if(!m.cl.length)return bar+'<section class="panel"><div class="empty"><h2>'+(ui.q.inadimplencia?'Nenhum cliente encontrado':f?'Ninguém com mais de '+f+' dias de atraso':'Ninguém em atraso')+'</h2><p>'+(f?'Escolha “Todas” para ver quem está atrasado há menos tempo.':'Nenhuma cobrança vencida e sem pagamento. Quando houver, os clientes aparecem aqui, do maior para o menor valor devido.')+'</p></div></section>';
   var strip='<div class="strip"><div class="kpi alert"><div class="lbl">Total em atraso</div><div class="v">'+M(m.totC)+'</div><div class="s">saldo '+M(m.saldoC)+' + multa e juros '+M(m.encC)+'</div></div>'+
     '<div class="kpi"><div class="lbl">Clientes</div><div class="v">'+m.cl.length+'</div><div class="s">com cobrança vencida</div></div>'+
     '<div class="kpi"><div class="lbl">Cobranças vencidas</div><div class="v">'+m.rows.length+'</div><div class="s">não pagas</div></div>'+
@@ -5303,7 +5330,7 @@ function viewInadimplencia(){
     var c=D.cli[g.cid]||{};
     return'<div class="row"><div class="r-main"><button type="button" class="link" data-act="hist-abrir" data-id="'+esc(g.cid)+'">'+esc(nomeCli(g.cid))+'</button><div class="sub">'+(c.telefone?esc(c.telefone)+' · ':'<span class="muted">sem telefone</span> · ')+g.rows.length+(g.rows.length===1?' cobrança':' cobranças')+' · a mais antiga venceu em '+fmtDate(g.velha)+'</div></div>'+
       '<div class="r-amt"><span class="amt">'+M(g.totC)+'</span><span class="pill bad">Atraso de até '+g.max+' d</span></div>'+
-      '<div class="r-act">'+waBtn(c,inadMsg(g),'WhatsApp')+'<button type="button" class="btn sm" data-act="hist-abrir" data-id="'+esc(g.cid)+'">Extrato</button></div></div>';
+      '<div class="r-act">'+waBtn(c,inadMsg(g),'WhatsApp')+'<button type="button" class="btn sm" data-act="copiar-msg" data-id="'+esc(g.cid)+'">Copiar mensagem</button><button type="button" class="btn sm" data-act="hist-abrir" data-id="'+esc(g.cid)+'">Extrato</button></div></div>';
   }).join('')+'<div class="hint" style="padding:10px 16px 14px">Valores com multa e juros calculados até hoje. O WhatsApp só abre a conversa com a mensagem pronta; nada é enviado nem marcado sozinho.</div></section>';
   return bar+strip+aging+lista;
 }
@@ -5443,10 +5470,10 @@ function viewAgenda(){
   return nav+'<section class="panel">'+resumo+grid+'</section><section class="panel" style="margin-top:12px">'+tit+(lista||'<div class="row"><div class="r-main muted">Nada vence neste dia.</div></div>')+'</section>';
 }
 function viewHoje(){
-  var all=D.hoje,f=ui.hoje||'todas',st=function(r){return ctEstado(ctDe(r))};
+  var all=D.hoje.filter(function(r){return matchQ(ui.q.hoje,nomeCli(r.a.clienteId)+' '+nomeItem(r.a.itemId))}),f=ui.hoje||'todas',st=function(r){return ctEstado(ctDe(r))};
   var fn={todas:function(){return true},nenhum:function(r){return st(r)==='nenhum'},falta:function(r){var e=st(r);return e==='preparada'||e==='aberta'},enviada:function(r){return st(r)==='enviada'}};
   var chips=[['todas','Todas'],['nenhum','Não contatadas'],['falta','Falta confirmar'],['enviada','Envio confirmado']].map(function(c){return[c[0],c[1],all.filter(fn[c[0]]).length]});
-  var bar='<div class="toolbar"><div class="chips">'+chips.map(function(c){return'<button type="button" class="chip" aria-pressed="'+(f===c[0])+'" data-act="filtro-hoje" data-v="'+c[0]+'">'+c[1]+'<span class="n">'+c[2]+'</span></button>'}).join('')+'</div></div>';
+  var bar='<div class="toolbar"><div class="chips">'+chips.map(function(c){return'<button type="button" class="chip" aria-pressed="'+(f===c[0])+'" data-act="filtro-hoje" data-v="'+c[0]+'">'+c[1]+'<span class="n">'+c[2]+'</span></button>'}).join('')+'</div>'+searchBox('Buscar cliente ou item')+'</div>';
   var list=all.filter(fn[f]);
   var body='<div class="sumline" style="padding-top:12px">'+list.length+(list.length===1?' cobrança':' cobranças')+' · '+money(sumBy(list,function(r){return r.total}))+'</div>'+
     (list.length?list.map(hojeRow).join(''):'<div class="row"><div class="r-main muted">'+(all.length?'Nenhuma cobrança neste filtro.':'Nada para cobrar hoje. Nenhuma cobrança atrasada ou vencendo hoje.')+'</div></div>')+
@@ -5463,15 +5490,21 @@ function openCobrar(id,ref){
     fld('Mensagem','f-msg',ta('f-msg','').replace('rows="2"','rows="8"'))+
     '<div class="notice info" id="ct-st" style="margin-top:8px"></div>';
   var b=function(act,label,cls){return'<button type="button" class="btn'+(cls?' '+cls:'')+'" data-act="'+act+'" data-id="'+esc(id)+'" data-ref="'+esc(ref)+'">'+label+'</button>'};
-  openModal('Cobrar '+(c.nome||'cliente'),body,{submit:null,wide:true,left:b('hoje-prep','Salvar como preparada')+b('hoje-wa','Abrir no WhatsApp')+b('hoje-conf2','Confirmar que enviei','primary'),onOpen:function(f){
+  openModal('Cobrar '+(c.nome||'cliente'),body,{submit:null,wide:true,left:b('hoje-prep','Salvar como preparada')+b('hoje-copiar','Copiar mensagem')+'<a class="btn" id="wa-link" data-act="hoje-wa" data-id="'+esc(id)+'" data-ref="'+esc(ref)+'" href="#" target="_blank" rel="noopener">Abrir no WhatsApp</a>'+b('hoje-conf2','Confirmar que enviei','primary'),onOpen:function(f){
     var ta=f.elements['f-msg'];ta.value=ct.msg||waMsg(r);
     function st(){var e=ctEstado(ctDe(r));f.querySelector('#ct-st').textContent=CT_ROT[e]+(e==='enviada'?' às '+ctHora(ctDe(r).enviadoEm):'')+'. '+(e==='nenhum'?'Nada foi enviado ainda.':e==='enviada'?'':'O envio só conta quando você confirmar.')}
-    function canal(){var w=f.elements['f-canal'].value==='whatsapp';var bw=modalEl.querySelector('[data-act=hoje-wa]');bw.disabled=!w||!waHref(c,'x');bw.title=!waHref(c,'x')?'Cliente sem telefone cadastrado':''}
-    f.elements['f-canal'].addEventListener('change',canal);
+    /* o botão é um link de verdade: um toque abre o WhatsApp com a mensagem pronta. Sem telefone, abre o WhatsApp para escolher o contato. */
+    function canal(){
+      var w=f.elements['f-canal'].value==='whatsapp',bw=modalEl.querySelector('#wa-link'),h=w?(waHref(c,ta.value)||'https://wa.me/?text='+encodeURIComponent(ta.value)):'';
+      if(h){bw.href=h;bw.removeAttribute('aria-disabled')}else{bw.setAttribute('href','#');bw.setAttribute('aria-disabled','true')}
+      bw.title=!w?'Troque o canal para WhatsApp':!waHref(c,'x')?'Cliente sem telefone: o WhatsApp abre para você escolher o contato':'';
+    }
+    f.elements['f-canal'].addEventListener('change',canal);ta.addEventListener('input',canal);
     var px=f.elements['f-pixinc'];
     if(px)px.addEventListener('change',function(){
       var i=ta.value.indexOf(marca);if(i>=0)ta.value=ta.value.slice(0,i);
       if(px.checked)ta.value+=marca+pixCodigoDe(r,pixC);
+      canal();
     });
     canal();st();window.__ctSt=st;
   }});
@@ -5483,14 +5516,18 @@ function ctPrep(id,ref){
   ctSalvar(r,ctPatchBase(r,ctForm())).then(function(){toast('Mensagem preparada. Ainda não foi enviada.');if(window.__ctSt)window.__ctSt()},function(e){toast(e.message)});
 }
 function ctAbrirWa(id,ref){
+  /* o link do modal já abre o WhatsApp; aqui só fica registrado que a conversa foi aberta (não conta como enviada) */
   var r=(D.byAl[id]||[]).find(function(x){return x.ref===ref});if(!r)return;
-  var fm=ctForm(),c=D.cli[r.a.clienteId]||{},h=waHref(c,fm.msg);
-  if(!h){toast('Cliente sem telefone cadastrado.');return}
+  var fm=ctForm();if(fm.canal!=='whatsapp')return;
   var ex=ctDe(r)||{};
   ctSalvar(r,Object.assign(ctPatchBase(r,fm),{canal:'whatsapp',abertoEm:ex.abertoEm||Date.now()})).then(function(){
-    var a=document.createElement('a');a.href=h;a.target='_blank';a.rel='noopener';a.style.display='none';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500);
     toast('WhatsApp aberto. Depois de enviar, volte e confirme.');if(window.__ctSt)window.__ctSt();
   },function(e){toast(e.message)});
+}
+function copiarTexto(txt,okMsg){
+  function fb(){var t=document.createElement('textarea');t.value=txt;t.setAttribute('readonly','');t.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(t);t.select();var r=false;try{r=document.execCommand('copy')}catch(e){}t.remove();return r}
+  function fim(r){toast(r?(okMsg||'Mensagem copiada. Cole no WhatsApp.'):'Não foi possível copiar. Selecione o texto e copie.')}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){fim(true)},function(){fim(fb())});else fim(fb());
 }
 function ctConfirmar(id,ref,fromModal){
   var r=(D.byAl[id]||[]).find(function(x){return x.ref===ref});if(!r)return;
@@ -6910,6 +6947,10 @@ document.addEventListener('click',function(e){
     case'fmes-atual':ui.fmes='';render();break;
     case'filtro-hoje':ui.hoje=el.dataset.v;render();break;
     case'busca':openBusca();break;
+    case'al-novo-item':if(alSnap){voltaAl=alSnap();openItem()}break;
+    case'al-novo-cli':if(alSnap){voltaAl=alSnap();openCliente()}break;
+    case'hoje-copiar':copiarTexto(ctForm().msg);break;
+    case'copiar-msg':{var gi=inadModel(ui.inad||0).cl.filter(function(g){return g.cid===id})[0];if(gi)copiarTexto(inadMsg(gi),'Mensagem copiada. Cole no WhatsApp.');break}
     case'inad-f':ui.inad=Number(el.dataset.v)||0;render();break;
     case'inad-pdf':inadAcao('pdf');break;
     case'inad-print':inadAcao('print');break;
