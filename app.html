@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ctrl-alugueis-app" content="1"><meta name="app-versao" content="4.7.1"><meta name="theme-color" content="#2347C5"><meta name="mobile-web-app-capable" content="yes"><title>Controle de Aluguéis</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="ctrl-alugueis-app" content="1"><meta name="app-versao" content="4.7.2"><meta name="theme-color" content="#2347C5"><meta name="mobile-web-app-capable" content="yes"><title>Controle de Aluguéis</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><script>
 (function(){
-var V='4.7.1';
+var V='4.7.2';
 window.__V=V;window.__Q=[];window.__decided=true;window.__DEFAULT_REPO='';if(!window.__DEFAULT_REPO){try{var hm=/^([\w-]+)\.github\.io$/i.exec(location.hostname),sg=location.pathname.split('/')[1];if(hm&&sg)window.__DEFAULT_REPO=hm[1]+'/'+sg}catch(e){}}
 function cmp(a,b){a=String(a).split('.').map(Number);b=String(b).split('.').map(Number);for(var i=0;i<3;i++){var x=a[i]||0,y=b[i]||0;if(x!==y)return x>y?1:-1}return 0}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}return null}
@@ -586,7 +586,7 @@ function itemTipo(i){return i&&i.tipo==='assinatura'?'Assinatura':'Equipamento'}
 function nomeCli(id){return D.cli[id]?D.cli[id].nome:'Cliente removido'}
 function nomeItem(id){return D.itm[id]?D.itm[id].nome:'Item removido'}
 function condText(a){
-  if(a.modalidade==='mes')return'Mensal · '+money(valorEm(a,todayStr()))+(a.reajustes&&a.reajustes.length?' (reajustado)':'')+' · vence dia '+a.diaVenc;
+  if(a.modalidade==='mes')return'Mensal · '+money(valorEm(a,todayStr()))+(a.reajustes&&a.reajustes.length?' (reajustado)':'')+' · vence dia '+a.diaVenc+(a.fimContrato?' · contrato até '+fmtDate(a.fimContrato):'');
   return'Por dia · '+money(a.valorUnit)+'/dia · '+fmtShort(a.inicio)+' a '+fmtShort(a.fim||a.inicio);
 }
 function pillCob(r){
@@ -1114,7 +1114,7 @@ function openItem(id){
       var vd=val(f,'f-dia')?parseMoney(val(f,'f-dia')):0,vm=val(f,'f-mes')?parseMoney(val(f,'f-mes')):0,vr=val(f,'f-rep')?parseMoney(val(f,'f-rep')):0,vc=val(f,'f-compra')?parseMoney(val(f,'f-compra')):0;
       if(isNaN(vd)||isNaN(vm)||isNaN(vr)||isNaN(vc)||vc<0)fail('Confira os valores informados.');
       var data={tipo:val(f,'f-tipo'),nome:nome,codigo:val(f,'f-cod'),valorDia:vd,valorMes:vm,valorReposicao:vr,valorCompra:vc,dataCompra:val(f,'f-dcompra'),obs:val(f,'f-obs')};
-      return w(function(){return i?db.doc('itens/'+i.id).update(data):db.collection('itens').add(Object.assign({criadoEm:Date.now()},data))}).then(function(r){toast('Item salvo.');if(voltaAl&&!i&&r&&r.id){voltaAl.pre.itemId=r.id;voltaAl.pre.valorUnit=0;voltaAl.aguarda=function(){return!!D.itm[r.id]}}});
+      return w(function(){return i?db.doc('itens/'+i.id).update(data):db.collection('itens').add(Object.assign({criadoEm:Date.now()},data))}).then(function(r){toast('Item salvo.');if(voltaAl&&!i&&r&&r.id){voltaAl.pre.itemId=r.id;voltaAl.pre.valorUnit=0;if(!(vd>0)&&vm>0){voltaAl.pre.modalidade='mes';voltaAl.pre.valorUnit=vm}voltaAl.aguarda=function(){return!!D.itm[r.id]}}});
     }
   });
 }
@@ -1126,11 +1126,11 @@ function openAluguel(id,pre){
     return;
   }
   var t=todayStr();
-  var busy={};state.alugueis.forEach(function(x){if(x.status!=='encerrado'&&x.id!==id)busy[x.itemId]=true});
+  var busy={};state.alugueis.forEach(function(x){if(x.status!=='encerrado'&&x.id!==id)busy[x.itemId]=x});
   var cOpts='<option value="">Selecione</option>'+state.clientes.slice().sort(byNome).map(function(c){return'<option value="'+esc(c.id)+'"'+(a&&a.clienteId===c.id?' selected':'')+'>'+esc(c.nome)+'</option>'}).join('');
   var iOpts='<option value="">Selecione</option>'+state.itens.slice().sort(byNome).map(function(i){
     var off=i.tipo!=='assinatura'&&busy[i.id],man=i.tipo!=='assinatura'&&!off&&eqEmManut(i.id)&&!(a&&a.itemId===i.id);
-    return'<option value="'+esc(i.id)+'"'+(off||man?' disabled':'')+(a&&a.itemId===i.id?' selected':'')+'>'+esc(i.nome)+(i.codigo?' ('+esc(i.codigo)+')':'')+(off?' · alugado':man?' · em manutenção':'')+'</option>';
+    return'<option value="'+esc(i.id)+'"'+(off||man?' disabled':'')+(a&&a.itemId===i.id?' selected':'')+'>'+esc(i.nome)+(i.codigo?' ('+esc(i.codigo)+')':'')+(off?' · alugado'+(D.cli[busy[i.id].clienteId]?' para '+esc(String(D.cli[busy[i.id].clienteId].nome||'').split(' ')[0]):''):man?' · em manutenção':'')+'</option>';
   }).join('');
   var mod=a?a.modalidade:'dia';
   var body=fld('Cliente','f-cli','<input class="input" type="search" id="f-cli-q" placeholder="Digite para procurar o cliente" aria-label="Procurar cliente" autocomplete="off" style="margin-bottom:6px"><select class="input" id="f-cli" name="f-cli">'+cOpts+'</select>'+(canWrite?'<button type="button" class="btn sm" data-act="al-novo-cli" style="margin-top:6px">+ Cadastrar novo cliente</button>':''),'<span id="f-risco" aria-live="polite"></span>')+
@@ -1225,7 +1225,7 @@ function openDetalhe(id){
   var c=D.cli[a.clienteId],rows=D.byAl[id]||[],s=alStatus(a);
   var pays=state.pagamentos.filter(function(p){return p.aluguelId===id}).sort(function(x,y){return String(y.data).localeCompare(String(x.data))});
   var periodo=a.modalidade==='mes'?'Desde '+fmtDate(a.inicio)+(a.encerradoEm?' até '+fmtDate(a.encerradoEm):''):fmtDate(a.inicio)+' a '+fmtDate(a.fim||a.inicio)+(a.devolucao?' · devolvido em '+fmtDate(a.devolucao):'');
-  var kv='<dl class="kv"><dt>Situação</dt><dd><span class="pill '+s.k+'">'+s.t+'</span></dd><dt>Cliente</dt><dd>'+esc(nomeCli(a.clienteId))+(c&&c.telefone?' · '+esc(c.telefone):'')+'</dd><dt>Item</dt><dd>'+esc(nomeItem(a.itemId))+'<span class="tag">'+itemTipo(D.itm[a.itemId])+'</span></dd><dt>Condição</dt><dd>'+esc(condText(a))+'</dd><dt>Período</dt><dd>'+esc(periodo)+'</dd>'+(a.obs?'<dt>Notas</dt><dd>'+esc(a.obs)+'</dd>':'')+'</dl>';
+  var kv='<dl class="kv"><dt>Situação</dt><dd><span class="pill '+s.k+'">'+s.t+'</span></dd><dt>Cliente</dt><dd>'+esc(nomeCli(a.clienteId))+(c&&c.telefone?' · '+esc(c.telefone):'')+'</dd><dt>Item</dt><dd>'+esc(nomeItem(a.itemId))+'<span class="tag">'+itemTipo(D.itm[a.itemId])+'</span></dd><dt>Condição</dt><dd>'+esc(condText(a))+'</dd><dt>Período</dt><dd>'+esc(periodo)+'</dd>'+(a.modalidade==='mes'&&a.fimContrato?'<dt>Fim do contrato</dt><dd>'+esc(fmtDate(a.fimContrato))+'</dd>':'')+(a.obs?'<dt>Notas</dt><dd>'+esc(a.obs)+'</dd>':'')+'</dl>';
   var cob='<div class="h3">Cobranças</div><div class="mini">'+(rows.length?rows.map(function(r){
     return'<div class="row"><div class="r-main">'+esc(whatText(r))+'<div class="sub">'+money(r.valor)+(r.pago>0?' · pago '+money(r.pago):'')+(r.enc>0?' · multa '+money(r.multa)+' + juros '+money(r.juros):'')+(r.vencOrig?' · vencimento alterado (era '+fmtDate(r.vencOrig)+')':'')+'</div></div><div class="r-meta">'+fmtDate(r.venc)+'</div><div class="r-amt">'+pillCob(r)+'</div>'+(canWrite&&r.status!=='pago'?'<div class="r-act"><button type="button" class="btn sm primary" data-act="receber" data-id="'+esc(id)+'" data-ref="'+esc(r.ref)+'">Receber</button><button type="button" class="btn sm" data-act="pix" data-id="'+esc(id)+'" data-ref="'+esc(r.ref)+'">Pix</button><button type="button" class="btn sm" data-act="venc" data-id="'+esc(id)+'" data-ref="'+esc(r.ref)+'">Vencimento</button></div>':'')+'</div>';
   }).join(''):'<div class="row"><div class="r-main muted">Ainda não há cobranças geradas.</div></div>')+'</div>';
@@ -6207,7 +6207,7 @@ function docVars(a){
     cliente_endereco:c.endereco||'[não informado]',cliente_atividade:c.atividade||'[não informado]',
     cliente_end_texto:c.endereco?', residente em '+c.endereco:'',cliente_ativ_texto:c.atividade?', '+c.atividade:'',
     pagamento_texto:dia?'até '+fmtDate(fim):'todo dia '+a.diaVenc+' de cada mês',
-    prazo:dia?'de '+fmtDate(a.inicio)+' a '+fmtDate(fim):'a partir de '+fmtDate(a.inicio)+', por prazo indeterminado',
+    prazo:dia?'de '+fmtDate(a.inicio)+' a '+fmtDate(fim):'a partir de '+fmtDate(a.inicio)+(a.fimContrato?', com término em '+fmtDate(a.fimContrato):', por prazo indeterminado'),
     multa:String(cfg.multa).replace('.',','),juros:String(cfg.juros).replace('.',','),aviso_dias:String(cfg.avisoDias),
     estado_equip:a.estadoEntrega||'em bom estado de funcionamento e conservação',
     acessorios:a.acessorios||'nenhum além do próprio equipamento',
